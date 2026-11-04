@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="{{ config.default_language }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ config.title }} · {{ config.extra.tagline }}{% endblock title %}</title>
+<meta name="description" content="{% block description %}{{ config.description }}{% endblock description %}">
+<link rel="canonical" href="{% block canonical %}{{ current_url | default(value=config.base_url) }}{% endblock canonical %}">
+
+<meta property="og:site_name" content="{{ config.title }}">
+<meta property="og:type" content="{% block og_type %}website{% endblock og_type %}">
+<meta property="og:title" content="{% block og_title %}{{ config.title }}{% endblock og_title %}">
+<meta property="og:description" content="{% block og_description %}{{ config.description }}{% endblock og_description %}">
+<meta property="og:url" content="{{ current_url | default(value=config.base_url) }}">
+<meta property="og:image" content="{{ get_url(path='agenticlinux-mark.png', trailing_slash=false) }}">
+<meta name="twitter:card" content="summary">
+
+<link rel="alternate" type="application/atom+xml" title="{{ config.title }} blog" href="{{ get_url(path='blog/atom.xml', trailing_slash=false) }}">
+<link rel="icon" href="{{ get_url(path='favicon.png', trailing_slash=false) }}" type="image/png">
+<link rel="apple-touch-icon" href="{{ get_url(path='apple-touch-icon.png', trailing_slash=false) }}">
+<link rel="stylesheet" href="{{ get_url(path='style.css', trailing_slash=false) }}">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="{{ get_url(path='@/_index.md') }}"><img class="brand-mark" src="{{ get_url(path='agenticlinux-mark.png', trailing_slash=false) }}" alt="" width="28" height="28">AgenticLinux</a>
+    <nav class="site-nav">
+      <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
+      <a class="nav-repo" href="{{ config.extra.repo_url }}">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+{% block content %}{% endblock content %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>
+      <a href="{{ config.extra.repo_url }}">{{ config.extra.repo_name }}</a>
+      · Apache-2.0
+      · <a href="{{ get_url(path='blog/atom.xml', trailing_slash=false) }}">Atom feed</a>
+    </p>
+    <p class="muted">Built with <a href="https://www.getzola.org">Zola</a>.</p>
+  </div>
+</footer>
+
+</body>
+</html>

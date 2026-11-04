@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Not found · {{ config.title }}{% endblock title %}
+
+{% block content %}
+<section class="wrap section page-head">
+  <h1>404</h1>
+  <p class="lede">That page does not exist.</p>
+  <pre class="cmd"><code>agenticlinux: no such page</code></pre>
+  <p class="hero-links">
+    <a class="btn" href="{{ get_url(path='@/_index.md') }}">Home</a>
+    <a class="btn btn-quiet" href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
+  </p>
+</section>
+{% endblock content %}

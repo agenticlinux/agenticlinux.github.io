@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Tags · {{ config.title }}{% endblock title %}
+{% block description %}All tags used on the AgenticLinux blog.{% endblock description %}
+
+{% block content %}
+<section class="wrap section page-head">
+  <h1>Tags</h1>
+</section>
+
+<section class="wrap section">
+  <p class="tags tags-big">
+    {% for term in terms %}<a href="{{ term.permalink }}">#{{ term.name }} <span class="muted">({{ term.pages | length }})</span></a>{% endfor %}
+  </p>
+</section>
+{% endblock content %}

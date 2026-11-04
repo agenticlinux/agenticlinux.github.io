@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page.title }} · {{ config.title }}{% endblock title %}
+{% block description %}{{ page.description | default(value=config.description) }}{% endblock description %}
+{% block og_type %}article{% endblock og_type %}
+{% block og_title %}{{ page.title }}{% endblock og_title %}
+{% block og_description %}{{ page.description | default(value=config.description) }}{% endblock og_description %}
+
+{% block content %}
+<article class="wrap section post">
+  <header class="post-head">
+    <p class="post-meta">
+      <time datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format="%B %-d, %Y") }}</time>
+      · {{ page.reading_time }} min read
+      {% if page.extra.author %}· {{ page.extra.author }}{% endif %}
+    </p>
+    <h1>{{ page.title }}</h1>
+    {% if page.description %}<p class="lede">{{ page.description }}</p>{% endif %}
+  </header>
+
+  <div class="prose">
+    {{ page.content | safe }}
+  </div>
+
+  <footer class="post-foot">
+    {% if page.taxonomies.tags %}
+    <p class="tags">{% for tag in page.taxonomies.tags %}<a href="{{ get_taxonomy_url(kind='tags', name=tag) }}">#{{ tag }}</a>{% endfor %}</p>
+    {% endif %}
+    <nav class="post-nav">
+      {% if page.earlier %}<a href="{{ page.earlier.permalink }}">← {{ page.earlier.title }}</a>{% endif %}
+      {% if page.later %}<a class="next" href="{{ page.later.permalink }}">{{ page.later.title }} →</a>{% endif %}
+    </nav>
+    <p><a class="more" href="{{ get_url(path='@/blog/_index.md') }}">All posts</a></p>
+  </footer>
+</article>
+{% endblock content %}

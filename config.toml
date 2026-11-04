@@ -1,0 +1,135 @@
+base_url = "https://agenticlinux.github.io"
+title = "AgenticLinux"
+description = "A Linux desktop built for working with AI agents. The claude, codex, opencode, openclaw and goose agents, Docker, Docker Sandboxes, QEMU with KVM and GPU runtimes are there on first boot, in a bootc image with atomic updates and automatic rollback."
+
+default_language = "en"
+compile_sass = false
+build_search_index = false
+minify_html = true
+
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+
+taxonomies = [
+    { name = "tags", feed = true },
+]
+
+[markdown]
+smart_punctuation = true
+render_emoji = false
+
+[extra]
+# Edit landing-page copy here rather than in the templates.
+tagline = "A Linux desktop for working with AI agents."
+subtitle = "The claude, codex, opencode, openclaw and goose agents, Docker, Docker Sandboxes, QEMU with KVM and GPU runtimes, installed on first boot. The whole OS is a bootc image, so updates are atomic and rollback is one command."
+
+hero_cmd = "sudo bootc switch docker.io/ericcurtin044/agenticlinux:kde"
+hero_cmd_note = "Switches an existing bootc system to the KDE Plasma variant, built from Fedora 44. The image is staged, and you boot into it on the next reboot. To install from scratch, use the ISO below."
+
+# A plain link, not an embedded video.
+demo_url = "https://github.com/ericcurtin/ericcurtin.github.io/releases/download/assets/openclaw-web.mp4"
+demo_text = "Demo video: OpenClaw's web Control UI on the KDE desktop, asked to check the machine's health, turn on automatic OS updates and reclaim Docker disk."
+
+repo_url = "https://github.com/agenticlinux/agenticlinux"
+repo_name = "agenticlinux/agenticlinux"
+releases_url = "https://github.com/agenticlinux/agenticlinux/releases/latest"
+
+# The variants table is built from this list and image_repo.
+image_repo = "docker.io/ericcurtin044/agenticlinux"
+
+[[extra.install]]
+label = "ISO"
+text = "Download the ISO for your desktop and architecture (for example agenticlinux-kde-x86_64.iso), boot it and install as usual. It is a network installer, so the install needs a network connection."
+link = "https://github.com/agenticlinux/agenticlinux/releases/latest"
+link_text = "Latest release"
+
+[[extra.install]]
+label = "bootc switch"
+text = "On an existing bootc system, switch to a variant's image:"
+cmd = "sudo bootc switch docker.io/ericcurtin044/agenticlinux:kde"
+
+[[extra.install]]
+label = "Update"
+text = "Fetch the newest image and reboot into it:"
+cmd = "sudo bootc upgrade --apply"
+
+[[extra.install]]
+label = "Roll back"
+text = "Boot the previous image on the next reboot:"
+cmd = "sudo bootc rollback"
+
+# Plain sentences, one command each. No cards.
+[[extra.points]]
+title = "Five agents, ready on first boot"
+body = "`claude`, `codex`, `opencode`, `openclaw` and `goose` are installed, with [herdr](https://herdr.dev) to run them side by side and [CodexBar](https://codex.bar) to watch their usage limits. The ChatGPT (with Codex), OpenCode and Goose desktop apps are installed too. Sign in once per agent; on a local model through llmman no account is needed."
+cmd = "codex login"
+
+[[extra.points]]
+title = "Docker, and Docker Sandboxes to isolate agents"
+body = "Docker Engine runs as a rootful system daemon or as a rootless daemon per user, with separate images and containers. [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) runs agents in isolation, and QEMU with KVM covers full virtual machines."
+cmd = "dockerd-rootless-setuptool.sh install"
+
+[[extra.points]]
+title = "Local models with llmman"
+body = "[llmman](https://github.com/llmmanorg/llmman) is preinstalled. It runs a model on your own machine, or connects any of the agents to a hosted provider."
+cmd = "llmman launch claude --model qwen3.8"
+
+[[extra.points]]
+title = "Atomic updates, and a rollback that happens by itself"
+body = "The whole OS is one image, rebuilt every 4 hours and on every push to `main`. `/etc` and `/var`, so your home directory, carry over between images. With bootguard, a new image gets three boot attempts; if it does not come up healthy, the machine returns to the previous image and does not retry the bad one."
+cmd = "bootc status"
+
+[[extra.points]]
+title = "GPU runtimes included"
+body = "Vulkan with the Mesa drivers, ROCm on x86_64, and the NVIDIA driver with CUDA libraries and `nvidia-container-toolkit` registered with Docker. The NVIDIA kernel module is unsigned, so disable Secure Boot or enroll your own MOK."
+cmd = "vulkaninfo"
+
+[[extra.variants]]
+variant = "kde"
+base = "Fedora 44"
+desktop = "KDE Plasma"
+
+[[extra.variants]]
+variant = "gnome"
+base = "Fedora 44"
+desktop = "GNOME"
+
+[[extra.variants]]
+variant = "sway"
+base = "Fedora 44"
+desktop = "Sway"
+
+[[extra.variants]]
+variant = "cosmic"
+base = "Fedora 44"
+desktop = "COSMIC"
+
+[[extra.variants]]
+variant = "xfce"
+base = "Fedora 44"
+desktop = "Xfce"
+
+[[extra.variants]]
+variant = "budgie"
+base = "Fedora 44"
+desktop = "Budgie"
+
+[[extra.variants]]
+variant = "base"
+base = "Fedora 44"
+desktop = "none"
+
+[[extra.variants]]
+variant = "centos-kde"
+base = "CentOS Stream 10"
+desktop = "KDE Plasma"
+
+[[extra.variants]]
+variant = "centos-gnome"
+base = "CentOS Stream 10"
+desktop = "GNOME"
+
+[[extra.variants]]
+variant = "centos-base"
+base = "CentOS Stream 10"
+desktop = "none"

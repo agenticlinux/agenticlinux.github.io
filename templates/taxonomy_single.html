@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}#{{ term.name }} · {{ config.title }}{% endblock title %}
+{% block description %}Posts tagged #{{ term.name }}.{% endblock description %}
+
+{% block content %}
+<section class="wrap section page-head">
+  <h1>#{{ term.name }}</h1>
+  <p class="lede">{{ term.pages | length }} post{% if term.pages | length != 1 %}s{% endif %}</p>
+</section>
+
+<section class="wrap section">
+  <ul class="post-list">
+    {% for post in term.pages %}
+    <li class="post-item">
+      <time datetime="{{ post.date | date(format='%Y-%m-%d') }}">{{ post.date | date(format="%b %-d, %Y") }}</time>
+      <a href="{{ post.permalink }}">{{ post.title }}</a>
+      {% if post.description %}<p class="post-blurb">{{ post.description }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock content %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-inner">
+    <img class="hero-mark"
+         src="{{ get_url(path='agenticlinux-mark.png', trailing_slash=false) }}"
+         alt="AgenticLinux logo: a friendly robot head"
+         width="256" height="256">
+    <div class="hero-copy">
+      <h1>{{ config.extra.tagline }}</h1>
+      <p class="lede">{{ config.extra.subtitle }}</p>
+      <pre class="cmd"><code>{{ config.extra.hero_cmd }}</code></pre>
+      <p class="cmd-note">{{ config.extra.hero_cmd_note }}</p>
+      <p class="hero-links">
+        <a class="btn" href="#install">Get started</a>
+        <a class="btn btn-quiet" href="{{ config.extra.repo_url }}">GitHub</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+{% if config.extra.demo_url %}
+<section class="wrap demo">
+  <p class="demo-link"><a href="{{ config.extra.demo_url }}">{{ config.extra.demo_text }}</a></p>
+</section>
+{% endif %}
+
+<section class="wrap section" id="install">
+  <h2 class="section-title">Get started</h2>
+  <div class="install">
+    {% for i in config.extra.install %}
+    <div class="install-row">
+      <span class="install-label">{{ i.label }}</span>
+      <div class="install-body">
+        {% if i.text %}<p class="install-text">{{ i.text }}{% if i.link %} <a href="{{ i.link }}">{{ i.link_text | default(value=i.link) }}</a>{% endif %}</p>{% endif %}
+        {% if i.cmd %}<pre class="cmd"><code>{{ i.cmd }}</code></pre>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="wrap section">
+  <h2 class="section-title">What is in it</h2>
+  {% for p in config.extra.points %}
+  <div class="point">
+    <h3>{{ p.title }}</h3>
+    <p>{{ p.body | markdown(inline=true) | safe }}</p>
+    <pre class="cmd"><code>{{ p.cmd }}</code></pre>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="wrap section" id="variants">
+  <h2 class="section-title">Variants</h2>
+  <p class="lede variants-lede">{{ config.extra.variants | length }} variants, for x86_64 and aarch64. The variant name is the image tag and part of the ISO name. The tag follows the newest build.</p>
+  <div class="table-wrap">
+    <table class="variants">
+      <thead>
+        <tr><th scope="col">Variant</th><th scope="col">Built from</th><th scope="col">Desktop</th><th scope="col">Image</th></tr>
+      </thead>
+      <tbody>
+        {% for v in config.extra.variants %}
+        <tr>
+          <th scope="row">{{ v.variant }}</th>
+          <td>{{ v.base }}</td>
+          <td>{{ v.desktop }}</td>
+          <td><code>{{ config.extra.image_repo }}:{{ v.variant }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="cmd-note">The variants carry the same packages on both distributions, so the CentOS Stream 10 variants are limited to what CentOS Stream 10, EPEL 10 and RPM Fusion have: GNOME and KDE Plasma are the desktops that exist there.</p>
+</section>
+
+{% set blog = get_section(path="blog/_index.md") %}
+{% if blog.pages | length > 0 %}
+<section class="wrap section">
+  <h2 class="section-title">From the blog</h2>
+  <ul class="post-list">
+    {% for post in blog.pages %}
+    {% if loop.index <= 5 %}
+    <li class="post-item">
+      <time datetime="{{ post.date | date(format='%Y-%m-%d') }}">{{ post.date | date(format="%b %-d, %Y") }}</time>
+      <a href="{{ post.permalink }}">{{ post.title }}</a>
+      {% if post.description %}<p class="post-blurb">{{ post.description }}</p>{% endif %}
+    </li>
+    {% endif %}
+    {% endfor %}
+  </ul>
+  <p><a class="more" href="{{ get_url(path='@/blog/_index.md') }}">All posts →</a></p>
+</section>
+{% endif %}
+
+<section class="wrap section" id="source">
+  <h2 class="section-title">Source</h2>
+  <p>AgenticLinux is open source under the Apache-2.0 license. The packages, build scripts, bootguard and the CI that builds and tests every variant are in one repository.</p>
+  <p class="hero-links">
+    <a class="btn" href="{{ config.extra.repo_url }}">{{ config.extra.repo_name }} on GitHub</a>
+    <a class="btn btn-quiet" href="{{ config.extra.releases_url }}">Latest release</a>
+  </p>
+</section>
+{% endblock content %}
