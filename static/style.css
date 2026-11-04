@@ -309,6 +309,8 @@ table.variants code { font-size: 0.82rem; }
 .prose li { margin-bottom: 0.4em; }
 .prose img, .prose video { max-width: 100%; height: auto; border-radius: var(--radius); }
 .prose audio { width: 100%; }
+.prose figure { margin: 1.6rem 0; }
+.prose figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 .prose hr { border: 0; border-top: 1px solid var(--line); margin: 2.5rem 0; }
 
 .prose blockquote {
