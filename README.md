@@ -56,6 +56,27 @@ Notes:
   an en dash. Keep prose to plain sentences, and state only what the
   [main repository](https://github.com/agenticlinux/agenticlinux) supports.
 
+## Videos and screenshots
+
+Binary media is not committed: it would stay in the repository's history for
+good. It is uploaded to the `assets` GitHub release instead, and a post links
+to the file there:
+
+```sh
+gh release upload assets dgx-spark-demo.mp4 dgx-spark-demo.webm --clobber
+```
+
+```html
+<video controls preload="none" poster="https://github.com/agenticlinux/agenticlinux.github.io/releases/download/assets/dgx-spark-demo.png" width="1228" height="812">
+<source src="https://github.com/agenticlinux/agenticlinux.github.io/releases/download/assets/dgx-spark-demo.webm" type="video/webm">
+<source src="https://github.com/agenticlinux/agenticlinux.github.io/releases/download/assets/dgx-spark-demo.mp4" type="video/mp4">
+</video>
+```
+
+Prefix each file with the post it belongs to, give a video both WebM and MP4
+and a PNG poster, and give images and videos their `width` and `height` so
+the page does not jump as they load.
+
 ## Editing the landing page
 
 Copy on the home page (the tagline, the subtitle, the hero command, the
