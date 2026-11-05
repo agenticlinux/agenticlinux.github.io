@@ -123,8 +123,8 @@ CI builds every variant on both architectures and runs a smoke test in a
 container of each image. It pulls a small local model and runs each agent
 on it. Each x86_64 image is also installed to a disk and booted in `qemu`
 with [test/smoke.sh](https://github.com/agenticlinux/agenticlinux/blob/main/test/smoke.sh),
-which covers what needs a real boot: Docker (rootful and rootless) and
-podman. Images are published only if every variant passes on both
+which covers what needs a real boot: Docker, rootful and rootless. Images
+are published only if every variant passes on both
 architectures.
 
 ## Things to know

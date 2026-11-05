@@ -131,7 +131,7 @@ a container, not by booting an image with it.
   Thunderbolt or the Touch Bar.
 - The agents were only started, with `--version`. We did not run a model on
   them, and the mini has 8 GB of memory.
-- We switched from an image built on the DGX Spark by `podman`, not from the
+- We switched from an image built on the DGX Spark, not from the
   published one, so the `bootc switch` command above has not been run
   against Docker Hub. The published images are a CI build of the same code,
   smoke-tested in a container, but not booted.

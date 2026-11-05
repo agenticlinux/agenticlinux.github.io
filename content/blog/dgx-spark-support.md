@@ -140,7 +140,7 @@ read-only at `/sysroot`, so the old home directory is at
 `/sysroot/home/<user>`. The `--root-ssh-authorized-keys` option gives root
 your key, which is a way in if the account set up below does not work.
 
-We installed from an image built on the Spark, with `podman run`. The
+We installed from an image built on the Spark. The
 `docker run` form above, which pulls the image from the registry, is the
 same install but has not been run.
 
@@ -158,12 +158,6 @@ and `/ostree/deploy/default/var`:
   uses the kernel's `mt7925e` driver, and its firmware is in the image.
 - **`sshd`.** The image does not enable it, so a symlink in
   `multi-user.target.wants`.
-- **Subordinate IDs.** A line for the user in `/etc/subuid` and in
-  `/etc/subgid`, such as `<user>:100000:65536`. A user added by hand has
-  none, and rootless Podman then fails to pull an image with `potentially
-  insufficient UIDs or GIDs available in user namespace`. Podman is what
-  `llmman serve` falls back to when Docker cannot start its container,
-  and what the OpenShell gateway's RPM defaults to.
 
 The machine took a new DHCP address after the install, so the old one
 did not answer. `avahi` is in the image, so `<hostname>.local` did.
