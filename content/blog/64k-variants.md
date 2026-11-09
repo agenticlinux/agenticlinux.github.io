@@ -285,7 +285,9 @@ is empty (0 bytes, and the kernel command line has no `console=`), so
 also listed this unit as failed on the 4 KiB image, so it is not new with 64
 KiB pages. We have a patch that treats a missing console as not virtual, with a
 test that segfaults without it and passes with it, built and run in a Fedora 45
-container. It has not been sent upstream yet, and nothing was tried on the
+container. It is
+[merge request 525](https://gitlab.freedesktop.org/plymouth/plymouth/-/merge_requests/525)
+on plymouth's GitLab, not merged as we write this, and nothing was tried on the
 Spark.
 
 **`systemd-suspend.service` failed.** A suspend was tried on Nov 6, a few
