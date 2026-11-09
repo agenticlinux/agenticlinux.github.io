@@ -1,21 +1,24 @@
 +++
-title = "AgenticLinux with 64 KiB pages: the 64k variants"
-description = "The 64k- variants of AgenticLinux are the Fedora 45 variants with a 64 KiB-page kernel, for the NVIDIA DGX Spark and other aarch64 machines. Fedora has no such kernel, so we build one from its source. This is how it is built, how to switch to one and what we did not test."
+title = "AgenticLinux on the DGX Spark with 64 KiB pages: the 64k variants"
+description = "The 64k- variants of AgenticLinux are the Fedora 45 variants with a 64 KiB-page kernel, built from Fedora's source. We booted 64k-fedora45-kde on the DGX Spark: the page size is 65536, the NVIDIA 580 module loads, and a CUDA 13 llama.cpp container runs a model on the GPU. The system came up degraded, and this is what we saw."
 date = 2026-11-09
 
 [taxonomies]
 tags = ["announcement", "64k", "aarch64", "dgx-spark"]
 +++
 
-AgenticLinux now has `64k-` variants: the Fedora 45 variants with a kernel
-built for 64 KiB pages, for the NVIDIA DGX Spark (GB10, aarch64) and other
-Arm machines. Fedora does not ship a 64k kernel, so CI builds one from
-Fedora's kernel source. None of this has been booted yet, on a Spark or
-anywhere else: CI builds the images and smoke-tests them in a container.
+AgenticLinux now has `64k-` variants, and we have booted one on the NVIDIA
+DGX Spark. The Spark already ran the 4 KiB-page KDE image, and the
+`64k-fedora45-kde` tag is its new deployment, with the 4 KiB one kept as the
+rollback. It runs kernel `7.2.15-300.fc45.aarch64+64k`, `getconf PAGESIZE`
+says `65536`, `nvidia-smi` sees the GB10 with the 580.196.07 driver and the
+module built for the 64k kernel, and Docker runs a CUDA 13 llama.cpp
+container on the GPU, where a small model answers. The system is `degraded`,
+with four failed units, one of them new.
 
-This post covers what the `64k-` variants are, why the page size matters,
-how the kernel and the images are built, how to switch to one, what went
-wrong on the way, and what we did not test.
+This post covers what the `64k-` variants are, why 64 KiB pages, what we
+looked at on the Spark, how the kernel and the images are built, how to
+switch to one, what went wrong, and what we did not test.
 
 <!-- more -->
 
@@ -39,21 +42,95 @@ machines are not excluded. The two differ in where the kernel comes from:
 They are aarch64 only, and Fedora only: `build.sh` refuses a `64k-` variant
 on x86_64 or on CentOS Stream.
 
-## Why the page size matters
+The repository names the DGX Spark and "other Arm servers" as the targets.
+We have tried the Spark only. No other Arm server has run one.
 
-The page is the unit the kernel maps memory in. With 64 KiB pages, 16 times
-the memory is covered by one page table entry, and by one TLB entry, than
-with the 4 KiB pages of Fedora's aarch64 kernel. That helps machines with a
-lot of memory and large working sets, and the DGX Spark has 128 GB shared by
-the CPU and the GPU. The repository names the Spark and "other Arm servers"
-as the targets. Fedora's own `kernel.spec` has a 64k variant and turns it
-off, and a comment in `kernel64k.sh` gives the reason: RHEL ships it.
+## Why 64 KiB pages
 
-There is a cost. Memory is handed out in 64 KiB units, so many small files
-and small mappings waste more of it, and software written with 4 KiB pages
-in mind can misbehave. We have not measured either effect, and we do not
-claim the Spark is faster, or needs this, with 64 KiB pages. The variants
-exist so that you can try it.
+The page is the unit the kernel maps memory in. With 64 KiB pages, one page
+table entry, and one TLB entry, covers 16 times the memory it does with the
+4 KiB pages of Fedora's aarch64 kernel. A page-table page of 8-byte entries
+then holds 8192 of them, which maps 512 MiB, and that is the kernel's huge
+page on the Spark: `/proc/meminfo` says `Hugepagesize` is 524288 kB. This
+matters most for machines with a lot of memory and large working sets, and
+the Spark has 128 GB shared by the CPU and the GPU.
+
+Fedora's own `kernel.spec` has a 64k variant and turns it off, and a comment
+in `kernel64k.sh` gives the reason: RHEL ships it.
+
+There are costs. Memory is handed out in 64 KiB units, so many small files
+and small mappings can waste more of it, and software written with 4 KiB
+pages in mind can misbehave. Nothing was benchmarked. We did not compare
+memory use or speed with the 4 KiB kernel, and this post does not claim the
+Spark is faster, or uses less memory, with 64 KiB pages.
+
+## On the Spark
+
+The Spark is the one in [the Spark post](@/blog/dgx-spark-support.md). Its
+KDE image was moved to the 64k tag, and it has run the 64k kernel since
+Nov 6, with no reboot since. What we looked at, on Nov 9, was read-only
+inspection over SSH and one small model run.
+
+```sh
+uname -r
+getconf PAGESIZE
+```
+
+```
+7.2.15-300.fc45.aarch64+64k
+65536
+```
+
+The kernel:
+
+- `kernel-64k-core-7.2.15-300.fc45.aarch64` is installed, and is the only
+  directory in `/usr/lib/modules`.
+- The running configuration has `CONFIG_ARM64_64K_PAGES=y`, `CONFIG_ARM64_4K_PAGES`
+  not set, `CONFIG_ARM64_VA_BITS=48` and `CONFIG_TRANSPARENT_HUGEPAGE=y`.
+  Transparent huge pages are set to `madvise`.
+- `/sys/kernel/mm/hugepages` lists 2048 kB, 524288 kB and 16777216 kB sizes.
+- Python's `mmap.PAGESIZE` is 65536 as well.
+
+The image:
+
+- `/usr/lib/os-release` says `NAME=AgenticLinux`, `VERSION="45 (KDE Plasma)"`
+  and `VARIANT_ID=64k-fedora45-kde`.
+- There are two ostree deployments. The booted one has the origin
+  `ostree-unverified-registry:docker.io/ericcurtin044/agenticlinux:64k-fedora45-kde`.
+  The other has `docker.io/ericcurtin044/agenticlinux:fedora45-kde`, the 4 KiB
+  image it ran before, and is the rollback.
+- SELinux is enforcing, Secure Boot is disabled, and the boot is EFI. The
+  disk is a 3.7 TB NVMe with the root on ext4 at `/sysroot`.
+
+The NVIDIA driver:
+
+- `nvidia-smi` shows an NVIDIA GB10, driver 580.196.07 and CUDA 13.0. Its
+  memory usage reads `Not Supported` and `N/A`, as the GB10 shares memory
+  with the CPU.
+- `modinfo nvidia` points at
+  `/lib/modules/7.2.15-300.fc45.aarch64+64k/extra/nvidia-580xx/nvidia.ko.xz`,
+  from the package `kmod-nvidia-580xx-7.2.15-300.fc45.aarch64+64k`. So the
+  module that CI builds on a best-effort basis did build, loads and works on
+  the 64k kernel here.
+- `nvidia-smi` lists `kwin_wayland` as a graphics client.
+
+A model on the GPU, run through llmman, which was already serving:
+
+```sh
+llmman run qwen3.5:0.8b "Reply with one sentence: what is a page table?"
+```
+
+It answered correctly, in 12.6 seconds of wall-clock time including the load.
+While it ran, `nvidia-smi --query-compute-apps` listed `/app/llama-server`
+using 4499 MiB, and `llmman ps` showed the processor as `llama-server` in a
+container under Docker, with a context of 262144. The container image is
+`ghcr.io/ggml-org/llama.cpp:server-cuda13-b11960`. So Docker, a CUDA 13
+container and llama.cpp's CUDA backend work with the 64 KiB kernel on the
+GB10, with a small model.
+
+Also seen: Wi-Fi is up with an address, `sshd` and NetworkManager are active,
+and `llmman 0.1.621`, `claude`, `codex`, `opencode`, `openclaw`, `goose`,
+`nvtop`, `docker` and `podman` are on the `PATH`.
 
 ## How the kernel is built
 
@@ -118,12 +195,14 @@ the image is loaded, its layer count is checked against a limit of 100, and
 `smoke-vm` runs in a container of it. That script runs `bootc status`,
 runs `--version` on `sbx`, `llmman`, `herdr`, the agents and a few other
 tools, checks that the desktop applications' shared libraries resolve, and
-runs the agents on a small local model (`qwen3.5:0.8b`) through llmman.
+runs each agent on a one-word prompt with a small local model
+(`qwen3.5:0.8b`) through llmman.
 
 A container uses the runner's kernel, not the image's. No hosted runner
-has a 64 KiB-page arm64 machine or can boot an arm64 VM, so the 64k kernel
-is not run by CI at all. What CI shows is that the kernel builds, that the
-image builds around it, and that the userspace works.
+has a 64 KiB-page arm64 machine or can boot an arm64 VM, so CI does not boot
+the 64k kernel. What CI shows is that the kernel builds, that the image
+builds around it, and that the userspace works. The boot above was done by
+hand, on the Spark.
 
 ## Tags
 
@@ -138,9 +217,9 @@ registry and name the other posts use:
 | `64k-fedora45-<desktop>-<version>` | |
 
 The version is `45.<date>.<run number>`. There is one architecture, so
-these are plain tags, not manifest lists. We have not looked at the registry
-since the workflow was added, so check it for the tags before relying on
-them.
+these are plain tags, not manifest lists. The `64k-fedora45-kde` tag is on
+Docker Hub, and it is the origin of the Spark's booted deployment. We did
+not record which version of it that is, and we have used only the KDE tags.
 
 ## Switching to one
 
@@ -152,16 +231,16 @@ sudo systemctl reboot
 ```
 
 `/home` and `/var` carry over and the previous image stays as the rollback.
-Turn Secure Boot off first, as for the NVIDIA module on every image. The
-image is large: the 16k post has the numbers for the other variants, and
-`btrfs filesystem usage /sysroot` shows what you have. We have not measured
-the 64k ones.
+That is what the Spark's two deployments show: the booted origin is the
+`64k-fedora45-kde` registry tag and the other is the `fedora45-kde` one. We
+could not run `bootc status` there, which needs root, and we did not observe
+which command was typed, so we do not claim it was the one above.
 
-To install onto a Spark that still runs its stock Ubuntu, the steps in
-[the Spark post](@/blog/dgx-spark-support.md), `bootc install
-to-existing-root` and what to do before the first reboot, are the ones to
-start from, with a `64k-` tag in place of `kde`. We have not run them with a
-`64k-` image.
+Turn Secure Boot off first, as for the NVIDIA module on every image. It is
+off on the Spark. The image is large and has to fit beside the old one, so
+look at the free space first, for example with `df -h /sysroot`. We did not
+measure the size of the 64k images, and the Spark's 3.7 TB disk was no test
+of a small one.
 
 To build one yourself, name the kernel stage, which takes hours:
 
@@ -170,10 +249,43 @@ docker build --target chunked --build-arg VARIANT=64k-kde --build-arg KERNEL=ker
   --build-arg BASE=quay.io/fedora-ostree-desktops/kinoite:45 -o type=tar,dest=image.tar .
 ```
 
-## What went wrong, and the fixes
+## What went wrong, and what we saw
 
-These come from the build scripts, their comments and the commit messages,
-not from a boot.
+### Booting it
+
+The system on the Spark is `degraded`: `systemctl is-system-running` says so,
+with four failed units. The causes are only partly known.
+
+**`tuned-ppd.service` is new.** Python died at start, at
+`from _ctypes import Union, Structure, Array`, with a `MemoryError`. This unit
+is not in the failed units the Spark post reported for the 4 KiB image. A
+`MemoryError` while importing `ctypes` at startup could be a 64 KiB-page
+problem, with libffi's closure allocation as the lead, but we did not confirm
+that and did not try the unit on the 4 KiB kernel. Treat it as new and
+unexplained.
+
+**`plymouth-start.service` crashed.** `plymouthd unexpectedly died from signal
+Segmentation fault immediately after starting to daemonize`. The cause is
+unknown, and we did not check whether the 4 KiB kernel does the same. The
+Spark post also listed it as failed on the 4 KiB image, so it is not new with
+64 KiB pages.
+
+**`systemd-suspend.service` failed.** `Failed to put system to sleep. System
+resumed again: Input/output error`. A suspend was tried on Nov 6, a few minutes
+after boot. This one is in the Spark post too.
+
+**`efi.automount` failed.** `Failed to check directory /efi: No such file or
+directory`: the generated unit for the EFI system partition wants `/efi`,
+which does not exist. Seen at boot. We did not compare it with the 4 KiB image.
+
+The early-boot log (`journalctl -b -p err`) also has firmware and initrd
+errors, from the CMA reservation to `Failed to resolve group` lines from
+`systemd-tmpfiles` and `udev`. We did not look into them or compare them with
+the 4 KiB kernel, so we do not attribute any of them to 64 KiB pages.
+
+### Building it
+
+These come from the build scripts, their comments and the commit messages.
 
 **Fedora has no 64k kernel.** The variant is in `kernel.spec` but forced off
 before the `%if` that reads it, and there is no configuration for it. The
@@ -199,26 +311,29 @@ first push failed with `insufficient_scope`.
 
 ## What we did not test
 
-- No `64k-` image has been booted: not on a DGX Spark, not on any other
-  aarch64 machine, not in a VM. CI runs its smoke test in a container.
-- The 64k kernel has not been run, so we do not know that it boots on the
-  Spark's firmware, or what Fedora's aarch64 configuration with the 64k
-  options does there. Only the page-size options differ from Fedora's, but
-  we have not tried it.
-- The NVIDIA module is built for the kernel when RPM Fusion's driver builds.
-  Whether it builds, loads and works on a 64 KiB-page kernel, on the GB10
-  or on another GPU, is untested.
-- `bootc switch` to a published `64k-` tag, and `bootc install
-  to-existing-root` with one, have not been run.
-- Nothing was measured: not memory use, not performance, not how local
-  models or the agents behave with 64 KiB pages compared with 4 KiB ones.
+- The Qwen 3.8 27B model of the Spark post was not run on the 64k kernel, and
+  neither was vLLM. Only `qwen3.5:0.8b` on llama.cpp was.
+- The coding agents (`claude`, `codex`, `opencode`, `openclaw`) were not run
+  on the 64k kernel. Only the CI smoke test, in a container, has run them.
+- Nothing was compared with the 4 KiB kernel: no benchmark, no memory use,
+  no model speed.
+- The desktop on the Spark's display was not looked at. `kwin_wayland` runs
+  and a `plasma-setup` session sits on `tty1`, but nobody completed Plasma's
+  first-run setup, so nobody has logged in to the desktop there.
+- Only Wi-Fi was exercised. The wired ports were down, with nothing plugged in.
+- Suspend failed when it was tried on Nov 6, as above.
+- Only the KDE variant was booted. The other six are built the same way, and
+  nobody has used them.
+- Other Arm servers are named as targets, and none has been tried. No other
+  64 KiB-page machine has either.
 - Software that assumes a 4 KiB page size has not been looked for.
-  Nothing beyond what the smoke test starts has been run.
-- All seven desktops are built the same way, and nobody has used any of
-  them.
-- Other Arm servers are named as targets, and none has been tried.
-- Secure Boot is off in every case above, because the kernel's modules are
-  signed with a key made for the build. Enrolling a key was not tried.
+- The cause of the `tuned-ppd` failure is unknown, and so is whether it
+  happens on the 4 KiB kernel.
+- Secure Boot is off on the Spark, because the kernel's modules are signed
+  with a key made for the build. Enrolling a key was not tried.
+- Installing over a stock Ubuntu with a `64k-` image, the route in the Spark
+  post, was not tried. This Spark was moved from the 4 KiB AgenticLinux
+  image.
 
 Questions and problems go to the
 [issue tracker](https://github.com/agenticlinux/agenticlinux/issues).
