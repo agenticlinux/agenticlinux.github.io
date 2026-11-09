@@ -254,28 +254,33 @@ docker build --target chunked --build-arg VARIANT=64k-kde --build-arg KERNEL=ker
 ### Booting it
 
 The system on the Spark is `degraded`: `systemctl is-system-running` says so,
-with four failed units. We looked into each one, read-only and over SSH, so
-the causes below come from the journal, the coredump metadata and the
-upstream source. We had no root on the Spark, so no fix has been tried there.
+with four failed units. We looked into each one, over SSH, so the causes
+below come from the journal, the coredump metadata and the upstream source. The
+only fix we tried on the Spark is the one for `tuned-ppd` below.
 
-**`tuned-ppd.service` is new compared with the Spark post.** Python died at
+**`tuned-ppd.service` fails on the 64k kernel and starts on the 4 KiB one.** Python dies at
 start, at `from _ctypes import Union, Structure, Array`, with a `MemoryError`.
-The journal has an SELinux denial for each start:
+The journal has SELinux denials for each start, on libffi's memfd:
 
 ```
 avc: denied { write } for comm="tuned-ppd" path="/memfd:libffi (deleted)"
   scontext=system_u:system_r:tuned_ppd_t:s0 tcontext=system_u:object_r:tmpfs_t:s0 tclass=file
 ```
 
-So `import ctypes` asks libffi for a closure, libffi writes to a memfd, and the
-`tuned_ppd_t` domain is not allowed to. The same `python3` as an ordinary user
-imports `ctypes` and makes a closure without trouble. We do not know why it
-fails here and not elsewhere. An x86_64 Fedora 45 machine with 4 KiB pages,
-the same `selinux-policy` (45.23), `libffi` (3.5.2) and `tuned-ppd` (2.28.0),
-runs the service. We did not boot the Spark's 4 KiB image to see whether it
-has the same denial, so we cannot say 64 KiB pages are the cause. No fix has
-been sent upstream for this one: we could not reproduce it without root on
-the Spark.
+With `tuned_ppd_t` made permissive for one start, there were exactly three:
+`write`, `read execute` and `map`. So `import ctypes` asks libffi for a
+closure, libffi writes, maps and executes a memfd, and the `tuned_ppd_t`
+domain is not allowed to. We switched the Spark to its 4 KiB deployment with
+`bootc rollback` and rebooted: with the same `selinux-policy` (45.23),
+`libffi` (3.5.2), `python3` (3.15.0) and `tuned-ppd` (2.28.0), `tuned-ppd`
+started and there was no libffi denial, and an x86_64 Fedora 45 machine runs it
+too. So the failure is specific to the 64 KiB kernel. We did not find out why
+libffi takes a different path there. We loaded a policy module with the
+equivalent allow rules on the 64k kernel, in enforcing mode: `tuned-ppd` started
+and stayed active, with no new denial. The same change, written with the policy
+interfaces, is
+[a pull request to selinux-policy](https://github.com/fedora-selinux/selinux-policy/pull/3506).
+We only compile-checked that version.
 
 **`plymouth-start.service` crashed, and it is a plymouth bug.** The coredump
 metadata has the stack `strcmp` called from `main`. On the Spark `/proc/consoles`
@@ -358,9 +363,10 @@ first push failed with `insufficient_scope`.
 - Other Arm servers are named as targets, and none has been tried. No other
   64 KiB-page machine has either.
 - Software that assumes a 4 KiB page size has not been looked for.
-- Whether the `tuned-ppd` denial happens on the 4 KiB kernel on aarch64, and
-  what fixes it: it has not been reproduced or fixed.
-- Any of the fixes for the four failed units on the Spark itself.
+- Why libffi uses its memfd on the 64 KiB kernel and not on the 4 KiB one.
+- The policy change as written in the pull request: only the equivalent module
+  ran on the Spark.
+- The fixes for the other three failed units, on the Spark itself.
 - Secure Boot is off on the Spark, because the kernel's modules are signed
   with a key made for the build. Enrolling a key was not tried.
 - Installing over a stock Ubuntu with a `64k-` image, the route in the Spark
