@@ -19,17 +19,24 @@
 <link rel="icon" href="{{ get_url(path='favicon.png', trailing_slash=false) }}" type="image/png">
 <link rel="apple-touch-icon" href="{{ get_url(path='apple-touch-icon.png', trailing_slash=false) }}">
 <link rel="stylesheet" href="{{ get_url(path='style.css', trailing_slash=false) }}">
+<script src="{{ get_url(path='site.js', trailing_slash=false) }}" defer></script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock body_class %}">
+
+<svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0">
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+</svg>
 
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="site-header">
   <div class="wrap header-inner">
-    <a class="brand" href="{{ get_url(path='@/_index.md') }}"><img class="brand-mark" src="{{ get_url(path='agenticlinux-mark.png', trailing_slash=false) }}" alt="" width="28" height="28">AgenticLinux</a>
-    <nav class="site-nav">
-      <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
-      <a class="nav-repo" href="{{ config.extra.repo_url }}">GitHub</a>
+    <a class="brand" href="{{ get_url(path='@/_index.md') }}"><img class="brand-mark" src="{{ get_url(path='agenticlinux-mark.png', trailing_slash=false) }}" alt="AgenticLinux" width="32" height="32"></a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="gh" href="{{ config.extra.repo_url }}"><svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="sr-only">GitHub</span><span class="gh-count" data-stars data-repo="{{ config.extra.repo_name }}" hidden></span></a>
+      <a href="{{ config.extra.docs_url }}">Docs</a>
+      <a href="{{ get_url(path='@/blog/_index.md') }}"{% if current_path | default(value="") is matching(pat="^/(blog|tags)/") %} aria-current="page"{% endif %}>Blog</a>
     </nav>
   </div>
 </header>
@@ -40,12 +47,13 @@
 
 <footer class="site-footer">
   <div class="wrap footer-inner">
-    <p>
-      <a href="{{ config.extra.repo_url }}">{{ config.extra.repo_name }}</a>
-      · Apache-2.0
-      · <a href="{{ get_url(path='blog/atom.xml', trailing_slash=false) }}">Atom feed</a>
-    </p>
-    <p class="muted">Built with <a href="https://www.getzola.org">Zola</a>.</p>
+    <p class="copyright">&copy; {{ now() | date(format="%Y") }} AgenticLinux</p>
+    <nav class="footer-nav" aria-label="Footer">
+      <a href="{{ get_url(path='@/blog/_index.md') }}">Blog</a>
+      <a href="{{ config.extra.docs_url }}">Docs</a>
+      <a href="{{ config.extra.repo_url }}">GitHub</a>
+      <a href="{{ get_url(path='blog/atom.xml', trailing_slash=false) }}">Atom feed</a>
+    </nav>
   </div>
 </footer>
 

@@ -1,0 +1,3 @@
+{% component cmd(c: string, hero: bool = false) %}
+<div class="cmdbox{% if hero %} cmdbox-hero{% endif %}"><pre class="cmd"><code>{{ c | escape_html | replace(from="/", to="/<wbr>") | safe }}</code></pre><button class="copy" type="button" aria-label="Copy command" title="Copy command" hidden><svg class="i-copy" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg><svg class="i-check" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></button><span class="copy-note" role="status" aria-live="polite"></span></div>
+{% endcomponent cmd %}
