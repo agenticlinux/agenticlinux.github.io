@@ -19,9 +19,10 @@ smart_punctuation = true
 render_emoji = false
 
 [extra]
-# Edit landing-page copy here rather than in the templates.
+# Edit site copy here rather than in the templates. The home page uses
+# tagline, subtitle and hero_cmd; the docs pages render the rest.
 tagline = "A Linux desktop for working with AI agents."
-subtitle = "The claude, codex, opencode, openclaw and goose agents, Docker, Docker Sandboxes, QEMU with KVM and GPU runtimes, installed on first boot. The whole OS is a bootc image, so updates are atomic and rollback is one command."
+subtitle = "The claude, codex, opencode, openclaw and goose agents, Docker and GPU runtimes, ready on first boot. The whole OS is a bootc image, so updates are atomic and rollback is one command."
 
 hero_cmd = "sudo bootc switch docker.io/ericcurtin044/agenticlinux:kde"
 hero_cmd_note = "Switches an existing bootc system to the KDE Plasma variant, built from Fedora 44. The image is staged, and you boot into it on the next reboot. To install from scratch, use the ISO below."

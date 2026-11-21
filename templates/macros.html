@@ -1,0 +1,3 @@
+{% component cmd(c: string, hero: bool = false) %}
+<div class="cmdbox{% if hero %} cmdbox-hero{% endif %}"><pre class="cmd"><code>{{ c }}</code></pre><button class="copy" type="button" data-copy="{{ c }}" hidden>Copy</button></div>
+{% endcomponent cmd %}

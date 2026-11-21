@@ -77,26 +77,50 @@ Prefix each file with the post it belongs to, give a video both WebM and MP4
 and a PNG poster, and give images and videos their `width` and `height` so
 the page does not jump as they load.
 
-## Editing the landing page
+## Editing the landing page and docs
 
-Copy on the home page (the tagline, the subtitle, the hero command, the
-get-started commands, the points and the variants table) lives in
-`[extra]` in `config.toml`, so it can be changed without touching
-templates. Layout lives in `templates/index.html`.
+Site copy lives in `[extra]` in `config.toml`, so it can be changed without
+touching templates. Layout lives in `templates/`.
 
-- `[[extra.install]]` entries are rows in the "Get started" block. Each has
-  a `label`, optional `text` (with an optional `link` and `link_text`) and
-  an optional `cmd`.
-- `[[extra.points]]` entries are one plain paragraph and one command each.
-  No feature-card grid.
+The **home page** (`templates/index.html`) uses only `extra.tagline`,
+`extra.subtitle`, `extra.hero_cmd`, `extra.releases_url` and, for the small
+link line, `extra.demo_url`. The rule for this page: it must fit on one
+screen with no scrollbar at common desktop sizes (1920x1080 down to
+1280x720) and on a typical phone (390x844). The header, hero and footer
+share `100dvh` as a flex column, and sizes use `clamp()`. Only very short or
+very narrow viewports fall back to normal scrolling. So keep the subtitle to
+a couple of lines, and put anything longer in the docs. After changing
+the home page, check it at those sizes.
+
+The **docs** (`content/docs/`) are a Zola section, ordered with `weight`,
+rendered by `templates/docs.html` (landing page) and `templates/docs-page.html`
+(each page, with a sidebar and previous/next links). Each page's markdown
+body is optional prose; a `page.extra.kind` flag in its front matter tells the
+template which block of `config.toml` copy to render after it:
+
+| Page | `kind` | Rendered from |
+| --- | --- | --- |
+| `installation.md` | `install` | `[[extra.install]]`, `extra.hero_cmd_note`, `extra.demo_url` and `extra.demo_text` |
+| `included.md` | `points` | `[[extra.points]]`: a title, a markdown `body` and a `cmd` each |
+| `variants.md` | `variants` | `[[extra.variants]]` and `extra.image_repo` |
+| `source.md` | `source` | `extra.repo_url`, `extra.repo_name` and `extra.releases_url` |
+
+- `[[extra.install]]` entries are steps on the Installation page. Each has a
+  `label`, optional `text` (with an optional `link` and `link_text`) and an
+  optional `cmd`.
 - `[[extra.variants]]` entries feed the variants table. The image column is
   `extra.image_repo` plus the variant name, so a new variant is three
   lines.
 - `extra.demo_url` is a plain link to a demo video, not an embed. Remove it
-  to hide the line.
+  to hide the link.
+- `extra.repo_url` is the GitHub icon in the top navigation.
 
-The page is meant to answer "what is this?" in the first screen: one
-sentence, one command, what that command does.
+To add a docs page, create `content/docs/<name>.md` with a `title`, a
+`description` and a `weight`. It appears in the sidebar and the previous/next
+links by itself. Commands are rendered as copyable boxes (the `cmd` component
+in `templates/macros.html`); the copy button is added by a few lines of
+script in `templates/base.html` and is hidden when JavaScript or the
+clipboard API is not available.
 
 The logo is `static/agenticlinux-mark.png`, the AgenticLinux logo at
 256 px. `static/favicon.png` (32 px) and `static/apple-touch-icon.png`
@@ -105,11 +129,16 @@ The logo is `static/agenticlinux-mark.png`, the AgenticLinux logo at
 ## Layout
 
 ```
-config.toml              site config + landing-page copy
+config.toml              site config + site copy (home page and docs)
 content/_index.md        home page (renders via templates/index.html)
+content/docs/            docs section: _index.md plus one markdown file per page
 content/blog/            blog posts, one markdown file each
-templates/base.html      shared shell: head, header, footer
-templates/index.html     landing page
+templates/base.html      shared shell: head, top nav, footer, copy-button script
+templates/macros.html    the copyable command box component
+templates/index.html     home page (one screen)
+templates/docs.html      docs landing page
+templates/docs-page.html docs page: sidebar, content, previous/next
+templates/docs-sidebar.html  docs sidebar, included by both docs templates
 templates/blog.html      blog index
 templates/post.html      single post
 templates/taxonomy_*.html  tag pages

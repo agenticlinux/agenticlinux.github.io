@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page.title }} · Docs · {{ config.title }}{% endblock title %}
+{% block description %}{{ page.description | default(value=config.description) }}{% endblock description %}
+{% block og_title %}{{ page.title }} · Docs · {{ config.title }}{% endblock og_title %}
+{% block og_description %}{{ page.description | default(value=config.description) }}{% endblock og_description %}
+
+{% block content %}
+<div class="wrap docs">
+  {% include "docs-sidebar.html" %}
+  <article class="docs-body">
+    <header class="doc-head">
+      <h1>{{ page.title }}</h1>
+      {% if page.description %}<p class="lede">{{ page.description }}</p>{% endif %}
+    </header>
+
+    <div class="prose">
+      {% if page.content %}{{ page.content | safe }}{% endif %}
+
+      {% if page.extra.kind == "install" %}
+      <p>{{ config.extra.hero_cmd_note }}</p>
+      {% for i in config.extra.install %}
+      <section class="doc-step">
+        <h2 id="{{ i.label | slugify }}">{{ i.label }}</h2>
+        {% if i.text %}<p>{{ i.text }}{% if i.link %} <a href="{{ i.link }}">{{ i.link_text | default(value=i.link) }}</a>{% endif %}</p>{% endif %}
+        {% if i.cmd %}{{<cmd c={i.cmd} />}}{% endif %}
+      </section>
+      {% endfor %}
+      {% if config.extra.demo_url %}
+      <p class="doc-aside"><a href="{{ config.extra.demo_url }}">{{ config.extra.demo_text }}</a></p>
+      {% endif %}
+
+      {% elif page.extra.kind == "points" %}
+      {% for p in config.extra.points %}
+      <section class="doc-step">
+        <h2 id="{{ p.title | slugify }}">{{ p.title }}</h2>
+        <p>{{ p.body | markdown(inline=true) | safe }}</p>
+        {{<cmd c={p.cmd} />}}
+      </section>
+      {% endfor %}
+
+      {% elif page.extra.kind == "variants" %}
+      <p>{{ config.extra.variants | length }} variants, for x86_64 and aarch64. The variant name is the image tag and part of the ISO name. The tag follows the newest build.</p>
+      <div class="table-wrap">
+        <table class="variants">
+          <thead>
+            <tr><th scope="col">Variant</th><th scope="col">Built from</th><th scope="col">Desktop</th><th scope="col">Image</th></tr>
+          </thead>
+          <tbody>
+            {% for v in config.extra.variants %}
+            <tr>
+              <th scope="row">{{ v.variant }}</th>
+              <td>{{ v.base }}</td>
+              <td>{{ v.desktop }}</td>
+              <td><code>{{ config.extra.image_repo }}:{{ v.variant }}</code></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="doc-aside">The variants carry the same packages on both distributions, so the CentOS Stream 10 variants are limited to what CentOS Stream 10, EPEL 10 and RPM Fusion have: GNOME and KDE Plasma are the desktops that exist there.</p>
+
+      {% elif page.extra.kind == "source" %}
+      <p class="actions">
+        <a class="btn" href="{{ config.extra.repo_url }}">{{ config.extra.repo_name }} on GitHub</a>
+        <a class="btn btn-quiet" href="{{ config.extra.releases_url }}">Latest release</a>
+      </p>
+      {% endif %}
+    </div>
+
+    <nav class="doc-pager" aria-label="Previous and next page">
+      {% if page.lower %}<a class="prev" href="{{ page.lower.permalink }}"><span class="muted">Previous</span>{{ page.lower.title }}</a>{% endif %}
+      {% if page.higher %}<a class="next" href="{{ page.higher.permalink }}"><span class="muted">Next</span>{{ page.higher.title }}</a>{% endif %}
+    </nav>
+  </article>
+</div>
+{% endblock content %}
