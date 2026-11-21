@@ -79,45 +79,45 @@ the page does not jump as they load.
 
 ## Editing the landing page
 
-Copy on the home page (the tagline, the subtitle, the hero command, the
-get-started commands, the points and the variants table) lives in
-`[extra]` in `config.toml`, so it can be changed without touching
-templates. Layout lives in `templates/index.html`.
+The docs live in the README of the
+[main repository](https://github.com/agenticlinux/agenticlinux#readme), not
+here: this site is the landing page and the blog. Copy lives in `[extra]` in
+`config.toml`; layout lives in `templates/`.
 
-- `[[extra.install]]` entries are rows in the "Get started" block. Each has
-  a `label`, optional `text` (with an optional `link` and `link_text`) and
-  an optional `cmd`.
-- `[[extra.points]]` entries are one plain paragraph and one command each.
-  No feature-card grid.
-- `[[extra.variants]]` entries feed the variants table. The image column is
-  `extra.image_repo` plus the variant name, so a new variant is three
-  lines.
-- `extra.demo_url` is a plain link to a demo video, not an embed. Remove it
-  to hide the line.
+| Key | Used for |
+| --- | --- |
+| `extra.badge` | the pill above the headline |
+| `extra.tagline` | the headline, also used in the page `<title>`. It breaks into two lines before the word " for " |
+| `extra.subtitle` | the muted paragraph under the headline |
+| `extra.hero_cmd` | the install command in the pill, with its copy button |
+| `extra.start_url` | the "Get started" button (the main repository's Quick start) |
+| `extra.docs_url` | the "Docs" links in the header, footer and home page (the main repository's README) |
+| `extra.releases_url` | "Prefer an ISO? Download" |
+| `extra.demo_url` | an optional "Watch the demo" link. Remove the key to hide it |
+| `extra.repo_url`, `extra.repo_name` | the GitHub link, and the `owner/repo` the star count is read from |
 
-The page is meant to answer "what is this?" in the first screen: one
-sentence, one command, what that command does.
+The home page must fit on one screen with no scrollbar from 1920x1080 down
+to 360x640. The body is a flex column with `min-height: 100dvh`, the headline
+uses `clamp()`, and `max-height` media queries in `static/style.css` tighten
+it on short screens. Viewports under about 340x560 scroll normally. Recheck
+those sizes after changing the home page, and keep the subtitle short.
 
-The logo is `static/agenticlinux-mark.png`, the AgenticLinux logo at
-256 px. `static/favicon.png` (32 px) and `static/apple-touch-icon.png`
-(180 px, on the page background colour) are derived from it.
+`static/site.js` fetches the star count from the GitHub API (cached for 10
+minutes, hidden on failure) and wires up the copy buttons. If a copy is
+blocked, the command is selected and the button says "Press Ctrl+C". Without
+JavaScript the buttons stay hidden and clicking a command selects it (CSS
+`user-select: all`).
 
 ## Layout
 
 ```
-config.toml              site config + landing-page copy
-content/_index.md        home page (renders via templates/index.html)
+config.toml              site config and home page copy
+content/_index.md        home page (templates/index.html)
 content/blog/            blog posts, one markdown file each
-templates/base.html      shared shell: head, header, footer
-templates/index.html     landing page
-templates/blog.html      blog index
-templates/post.html      single post
-templates/taxonomy_*.html  tag pages
-templates/404.html       not-found page
+templates/               base shell, macros, home, blog, post, tags, 404
 static/style.css         all styling
-static/agenticlinux-mark.png  logo (header and hero)
-static/favicon.png
-static/apple-touch-icon.png
+static/site.js           copy buttons and star count
+static/*.png             logo (agenticlinux-mark), favicon, apple-touch-icon
 ```
 
 ## Deployment
